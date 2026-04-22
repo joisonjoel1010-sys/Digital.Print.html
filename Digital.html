@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Joji Digital - Bill Book</title>
+    <meta name="theme-color" content="#c00">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
+        body { background: #f0f0f0; }
+     .header { background: #c00; color: white; padding: 18px; text-align: center; font-size: 24px; font-weight: bold; }
+     .calc-box { max-width: 480px; margin: 20px auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+     .form-group { margin-bottom: 18px; }
+     .form-group label { display: block; margin-bottom: 6px; font-weight: bold; font-size: 15px; color: #333; }
+     .form-group select,.form-group input { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 6px; font-size: 17px; }
+     .radio-group { display: flex; gap: 20px; margin-top: 10px; }
+     .radio-group label { font-weight: normal; display: flex; align-items: center; gap: 8px; font-size: 16px; }
+     .result-box { background: #e8f5e9; border: 1px solid #4caf50; padding: 12px; border-radius: 6px; margin: 15px 0; font-size: 14px; }
+     .result-row { display: flex; justify-content: space-between; margin: 6px 0; }
+     .total-box { background: #1a1a1a; color: white; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0; }
+     .total-box h3 { font-size: 36px; margin-top: 8px; }
+     .btn { background: #25D366; color: white; border: none; padding: 15px; width: 100%; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 18px; margin-top: 10px; }
+     .btn-print { background: #6c757d; }
+     .section-title { font-weight: bold; color: #c00; margin: 25px 0 12px 0; font-size: 17px; border-bottom: 2px solid #c00; padding-bottom: 5px; }
+     .manual-rate { background: #fff3cd; border: 2px solid #ffc107; }
+
+       /* Bill Print Style */
+       @media print {
+           body * { visibility: hidden; }
+          .bill-print,.bill-print * { visibility: visible; }
+          .bill-print { position: absolute; left: 0; top: 0; width: 100%; }
+          .no-print { display: none!important; }
+       }
+      .bill-print { display: none; padding: 20px; font-family: 'Courier New', monospace; }
+      .bill-header { text-align: center; border-bottom: 2px dashed #000; padding-bottom: 10px; margin-bottom: 15px; }
+      .bill-row { display: flex; justify-content: space-between; margin: 8px 0; font-size: 14px; }
+      .bill-total { border-top: 2px dashed #000; border-bottom: 2px dashed #000; padding: 10px 0; margin: 15px 0; font-weight: bold; font-size: 18px; }
+      .bill-footer { text-align: center; margin-top: 20px; font-size: 12px; }
+      .bill-items { border-bottom: 1px dashed #000; padding-bottom: 10px; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="header no-print">Joji Digital - Bill Book</div>
+
+    <div class="calc-box no-print">
+        <div class="section-title">Bill Details</div>
+        <div class="form-group">
+            <label>Customer Name</label>
+            <input type="text" id="custName" placeholder="Customer பேரு">
+        </div>
+        <div class="form-group">
+            <label>Order No / Bill No</label>
+            <input type="text" id="orderNo" placeholder="Ex: JD001">
+        </div>
+        <div class="form-group">
+            <label>Date</label>
+            <input type="date" id="billDate">
+        </div>
+
+        <div class="section-title">1. Paper Type</div>
+        <div class="form-group">
+            <select id="paperType">
+                <option>Art Paper</option>
+                <option>Maplitho Paper</option>
+                <option>Nimbo Star</option>
+                <option>Special Board</option>
+                <option>Synthetic Bond</option>
+            </select>
+        </div>
+
+        <div class="section-title">2. Paper GSM</div>
+        <div class="form-group">
+            <select id="gsm">
+                <option>100 GSM</option>
+                <option>130 GSM</option>
+                <option>170 GSM</option>
+                <option>210 GSM</option>
+                <option>250 GSM</option>
+                <option>300 GSM</option>
+                <option>350 GSM</option>
+            </select>
+        </div>
+
+        <div class="section-title">3. Print Sides</div>
+        <div class="form-group">
+            <div class="radio-group">
+                <label><input type="radio" name="sides" value="ss" checked> Single Side</label>
+                <label><input type="radio" name="sides" value="fb"> Front / Back</label>
+            </div>
+        </div>
+
+        <div class="section-title">Rate per Sheet ₹</div>
+        <div class="form-group">
+            <input type="number" id="manualRate" class="manual-rate" placeholder="நீயே Rate Type பண்ணு" value="0" oninput="calculate()">
+        </div>
+
+        <div class="section-title">4. Total Qty வேணும்</div>
+        <div class="form-group">
+            <input type="number" id="qty" value="100" oninput="calculate()">
+        </div>
+
+        <div class="section-title">5. Lamination ₹</div>
+        <div class="form-group">
+            <input type="number" id="lamination" placeholder="0" value="0" oninput="calculate()">
+        </div>
+
+        <div class="section-title">6. Cutting ₹</div>
+        <div class="form-group">
+            <input type="number" id="cutting" placeholder="0" value="0" oninput="calculate()">
+        </div>
+
+        <div class="section-title">7. Scoring ₹</div>
+        <div class="form-group">
+            <input type="number" id="scoring" placeholder="0" value="0" oninput="calculate()">
+        </div>
+
+        <div class="section-title">8. UV / Gold Foiling ₹</div>
+        <div class="form-group">
+            <input type="number" id="foiling" placeholder="0" value="0" oninput="calculate()">
+        </div>
+
+        <div class="section-title">9. Die Cutting ₹</div>
+        <div class="form-group">
+            <input type="number" id="diecut" placeholder="0" value="0" oninput="calculate()">
+        </div>
+
+        <div class="section-title">10. Finishing ₹</div>
+        <div class="form-group">
+            <input type="number" id="finishing" placeholder="0" value="0" oninput="calculate()">
+        </div>
+
+        <div class="section-title">11. My Profit %</div>
+        <div class="form-group">
+            <input type="number" id="profit" placeholder="0" value="0" oninput="calculate()">
+        </div>
+
+        <div class="result-box">
+            <div class="result-row"><span>Sheet வேணும்:</span><b id="sheetNeed">0</b></div>
+            <div class="result-row"><span>Print Cost:</span><b id="printCost">₹0</b></div>
+            <div class="result-row"><span>Finishing Cost:</span><b id="finishCost">₹0</b></div>
+            <div class="result-row"><span>Base Cost:</span><b id="baseTotal">₹0</b></div>
+        </div>
+
+        <div class="total-box">
+            <p>Final Total</p>
+            <h3 id="finalTotal">₹0</h3>
+            <p>Per Sheet: <span id="perSheet">₹0</span></p>
+        </div>
+
+        <button class="btn" onclick="sendWhatsApp()">WhatsApp-ல அனுப்பு</button>
+        <button class="btn btn-print" onclick="printBill()">Bill Print எடு</button>
+    </div>
+
+    <!-- Print Bill Format -->
+    <div class="bill-print" id="billPrint">
+        <div class="bill-header">
+            <h2>JOJI DIGITAL</h2>
+            <p>Digital Print Service</p>
+            <p>Chennai | +91 7338957236</p>
+        </div>
+        <div class="bill-row">
+            <span>Bill No:</span>
+            <span id="p_orderNo">-</span>
+        </div>
+        <div class="bill-row">
+            <span>Date:</span>
+            <span id="p_date">-</span>
+        </div>
+        <div class="bill-row">
+            <span>Customer:</span>
+            <span id="p_custName">-</span>
+        </div>
+        <div style="border-top:1px dashed #000; margin:10px 0;"></div>
+        <div class="bill-items">
+            <div class="bill-row">
+                <span>Paper:</span>
+                <span id="p_paper">-</span>
+            </div>
+            <div class="bill-row">
+                <span>GSM:</span>
+                <span id="p_gsm">-</span>
+            </div>
+            <div class="bill-row">
+                <span>Print:</span>
+                <span id="p_sides">-</span>
+            </div>
+            <div class="bill-row">
+                <span>Rate/Sheet:</span>
+                <span id="p_rate">-</span>
+            </div>
+            <div class="bill-row">
+                <span>Qty:</span>
+                <span id="p_qty">-</span>
+            </div>
+            <div class="bill-row">
+                <span>Print Cost:</span>
+                <span id="p_printCost">-</span>
+            </div>
+            <div class="bill-row">
+                <span>Finishing:</span>
+                <span id="p_finishCost">-</span>
+            </div>
+        </div>
+        <div class="bill-total">
+            <div class="bill-row">
+                <span>TOTAL:</span>
+                <span id="p_total">₹0</span>
+            </div>
+        </div>
+        <div class="bill-footer">
+            <p>Thank You! Visit Again</p>
+            <p>* Computer Generated Bill *</p>
+        </div>
+    </div>
+
+    <script>
+        // Set today's date
+        document.getElementById('billDate').valueAsDate = new Date();
+
+        function calculate() {
+            const rate = +document.getElementById('manualRate').value || 0;
+            const qty = +document.getElementById('qty').value || 0;
+            const lamination = +document.getElementById('lamination').value || 0;
+            const cutting = +document.getElementById('cutting').value || 0;
+            const scoring = +document.getElementById('scoring').value || 0;
+            const foiling = +document.getElementById('foiling').value || 0;
+            const diecut = +document.getElementById('diecut').value || 0;
+            const finishing = +document.getElementById('finishing').value || 0;
+            const profit = +document.getElementById('profit').value || 0;
+
+            const printCost = qty * rate;
+            const finishCost = lamination + cutting + scoring + foiling + diecut + finishing;
+            const baseCost = printCost + finishCost;
+            const finalTotal = baseCost * (1 + profit / 100);
+
+            document.getElementById('sheetNeed').innerText = qty;
+            document.getElementById('printCost').innerText = '₹' + printCost.toFixed(2);
+            document.getElementById('finishCost').innerText = '₹' + finishCost.toFixed(2);
+            document.getElementById('baseTotal').innerText = '₹' + baseCost.toFixed(2);
+            document.getElementById('finalTotal').innerText = '₹' + finalTotal.toFixed(2);
+            document.getElementById('perSheet').innerText = '₹' + (finalTotal/qty || 0).toFixed(2);
+        }
+
+        function printBill() {
+            // Fill print data
+            document.getElementById('p_orderNo').innerText = document.getElementById('orderNo').value || '-';
+            document.getElementById('p_date').innerText = document.getElementById('billDate').value || '-';
+            document.getElementById('p_custName').innerText = document.getElementById('custName').value || '-';
+            document.getElementById('p_paper').innerText = document.getElementById('paperType').value;
+            document.getElementById('p_gsm').innerText = document.getElementById('gsm').value;
+            document.getElementById('p_sides').innerText = document.querySelector('input[name="sides"]:checked').value === 'ss'? 'Single Side' : 'Front/Back';
+            document.getElementById('p_rate').innerText = '₹' + document.getElementById('manualRate').value;
+            document.getElementById('p_qty').innerText = document.getElementById('qty').value + ' Sheets';
+            document.getElementById('p_printCost').innerText = document.getElementById('printCost').innerText;
+            document.getElementById('p_finishCost').innerText = document.getElementById('finishCost').innerText;
+            document.getElementById('p_total').innerText = document.getElementById('finalTotal').innerText;
+
+            document.getElementById('billPrint').style.display = 'block';
+            window.print();
+            document.getElementById('billPrint').style.display = 'none';
+        }
+
+        function sendWhatsApp() {
+            const custName = document.getElementById('custName').value || 'Customer';
+            const orderNo = document.getElementById('orderNo').value || 'N/A';
+            const paperType = document.getElementById('paperType').value;
+            const gsm = document.getElementById('gsm').value;
+            const sides = document.querySelector('input[name="sides"]:checked').value === 'ss'? 'S/S' : 'F/B';
+            const rate = document.getElementById('manualRate').value;
+            const qty = document.getElementById('qty').value;
+            const total = document.getElementById('finalTotal').innerText;
+            const profit = document.getElementById('profit').value;
+
+            const msg = `*JOJI DIGITAL - BILL*\n\nBill No: ${orderNo}\nCustomer: ${custName}\n\nPaper: ${paperType}\nGSM: ${gsm}\nPrint: ${sides}\nRate: ₹${rate}/sheet\nQty: ${qty}\nProfit: ${profit}%\n\n*Total: ${total}*\n\nThank You!`;
+            window.open(`https://wa.me/917338957236?text=${encodeURIComponent(msg)}`, '_blank');
+        }
+
+        calculate();
+    </script>
+
+</body>
+</html>
